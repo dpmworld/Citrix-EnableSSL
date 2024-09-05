@@ -71,29 +71,18 @@ if ($brokerssl -ne $null) {
 $c = ls Cert:\LocalMachine\My | ? {$_.HasPrivateKey -eq $true -and $_.NotAfter -gt (Get-Date) -and $_.Subject -notmatch "CN=.{8}-.{4}-.{4}-.{4}-.{12}"} | Select Subject, FriendlyName, Thumbprint, NotAfter | Sort-Object -Property NotAfter -Descending | Out-GridView -PassThru
 $cert = ls Cert:\LocalMachine\My | ? {$_.Thumbprint -eq $c.Thumbprint }
 
-<# 
-$service = [array](Get-WmiObject -Class Win32_Product | Select-String -Pattern "Citrix Broker Service")
-if ($service.count -ne 1 ) {
-    $service = [array]($service | Out-GridView -PassThru)
-}
-
-# (?<=\{).+?(?=\})
-
-$appid = [regex]::Matches($service[0].Line,"(?<=\{).+?(?=\})").Value
-#>
-
 ###
 ### Get Citrix Broker Service AppID
 ###
-$appID = Get-ChildItem HKLM:\software\Classes\Installer\Products | Get-ItemProperty | where {$_.ProductName -match ìCitrix Broker Serviceî} | foreach {$_.PSPath.ToString().Split(ì\î)[6]}
+$appID = Get-ChildItem HKLM:\software\Classes\Installer\Products | Get-ItemProperty | where {$_.ProductName -match ‚ÄúCitrix Broker Service‚Äù} | foreach {$_.PSPath.ToString().Split(‚Äú\‚Äù)[6]}
 if ($appID) {
-$appID = $appID.Insert(20,î-ì)
-$appID = $appID.Insert(16,î-ì)
-$appID = $appID.Insert(12,î-ì)
-$appID = $appID.Insert(8,î-ì)
-$appID = ì{$appID}î
+$appID = $appID.Insert(20,‚Äù-‚Äú)
+$appID = $appID.Insert(16,‚Äù-‚Äú)
+$appID = $appID.Insert(12,‚Äù-‚Äú)
+$appID = $appID.Insert(8,‚Äù-‚Äú)
+$appID = ‚Äú{$appID}‚Äù
 }
 
-#Add-NetIPHttpsCertBinding -IpPort ì0.0.0.0:443î -CertificateHash $cert.Thumbprint -CertificateStoreName ìMyî -ApplicationId $appID -NullEncryption $false
+#Add-NetIPHttpsCertBinding -IpPort ‚Äú0.0.0.0:443‚Äù -CertificateHash $cert.Thumbprint -CertificateStoreName ‚ÄúMy‚Äù -ApplicationId $appID -NullEncryption $false
 # netsh http add sslcert ipport=0.0.0.0:443 certhash=<hash number> appid={Citrix Broker Service GUID}
 Write-Output "netsh http add sslcert ipport=0.0.0.0:443 certhash=$($cert.Thumbprint) appid=$appid"
